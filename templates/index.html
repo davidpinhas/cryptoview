@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="CryptoView Market Dashboad - Binance API">
+    <meta name="keywords" content="Crypto, ETH, BTC, MemeCoins, binance">
+    <meta name="author" content="David Pinhas">
+    <title>CryptoView</title>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/index.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.2.6/gsap.min.js"></script>
+</head>
+
+<body>
+    <div class="cursor"></div>
+    <div id="loader"><span class="color">Crypto</span>View</div>
+    <div id="breaker"></div>
+    <div id="breaker-two"></div>
+    <div id="navigation-content">
+        <div class="logo"></div>
+        <div class="navigation-close"><span class="close-first"></span><span class="close-second"></span></div>
+        <div class="navigation-links"><a href="#" data-text="HOME" id="home-link">HOME</a></div>
+    </div>
+    <div id="navigation-bar">
+        <div class="menubar"><span class="first-span"></span><span class="second-span"></span><span
+                class="third-span"></span></div>
+    </div>
+    <div style="height:100%">
+        <div id="particles"></div>
+        <div class="header-content">
+            <div class="header-content-box">
+                <div class="firstline"><span class="color">Crypto</span>View</div>
+                <div class="secondline">Time for<span class="txt-rotate color" data-period="1200"
+                        data-rotate='[ " Some transactions!", " Checking the market?", " Getting some Memecoins!" ]'></span><span
+                        class="slash">|</span></div>
+            </div>
+        </div>
+        <div>
+            <div class="float-container">
+                <div style="float:left;height:280px;padding-left:10px;">
+                    <div id="btc_chart" style="color:#f5f5f5;font-family:raleway;font-size:1.4em;">BITCOIN PRICE</div>
+                </div>
+                <div style="float:right;height:280px;padding-right:10px;">
+                    <div id="eth_chart" style="color:#f5f5f5;font-family:raleway;font-size:1.4em;">ETHEREUM PRICE</div>
+                </div>
+            </div>
+            <div style="margin-top:24%;z-index:-1;">
+                <h3 style="color:#f5f5f5;font-family:raleway;font-size:1.4em;padding-top:15px;padding-left:15px;">Convert Crypto</h3>
+                {% with messages = get_flashed_messages() %} {% if messages %}
+                <div style="padding:5px;margin-bottom:10px;background-color:pink;border:solid red 1px;color:red">
+                    {% for message in messages %} {{ message }} {% endfor %}</div>
+                {% endif %} {% endwith %}
+                <form action="/buy" method="post" class="form-inline">
+                    <label for="quantity" class="rsi-color"> Quantity: </label>
+                    <input type="text" id="quantity" name="quantity" placeholder="eg. 0.001">
+                    <label for="symbol" class="rsi-color"> Select Crypto Coin: </label>
+                    <select name="symbol" id="symbol" style="padding: 0.73em;">
+                        {% for symbol in symbols %}
+                        <option value="">
+                            {{ symbol['symbol'] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <label for="buy" class="rsi-color"></label>
+                    <input class="button1" type="submit" id="buy" name="buy" value="buy">
+                </form>
+            </div>
+            <h2 style="color: whitesmoke;font-family:raleway;font-size:1.4em;padding-left:15px;padding-top: 30px;">RSI Strategy
+                Investment</h2>
+
+            <div>
+                <form class="form-inline">
+                    <div class="toggle-rect-color">
+                        <label for="RSI"></label>
+                        <input type="checkbox" id="rect3" name="RSI">
+                        <label for="rect3"></label>
+                    </div>
+                    <label for="rsi_length" class="rsi-color">RSI Length:</label>
+                    <input type="text" id="rsi_length" name="rsi_length" placeholder="14">
+                    <label for="rsi_overbought" class="rsi-color">Overbought:</label>
+                    <input type="text" id="rsi_overbought" name="rsi_overbought" placeholder="70">
+                    <label for="rsi_oversold" class="rsi-color">Oversold:</label>
+                    <input type="text" id="rsi_oversold" name="rsi_oversold" placeholder="30">
+                </form>
+
+            </div>
+            <div style="padding:15px;">
+                <h2 style="color: whitesmoke;font-family:raleway;font-size:1.4em;">Wallet</h2>
+                <tbody>
+                    <table class="styled-table"
+                        style="background-color: rgb(90, 90, 90);border-top-left-radius:10px;border-top-right-radius:10px;">
+                        <th class="styled-table-title"
+                            style="background-color: rgb(215, 214, 214);border-top-left-radius:10px;">Currency</th>
+                        <th class="styled-table-title"
+                            style="background-color: rgb(215, 214, 214);border-top-right-radius:10px;">Amount</th>
+                        {% for balance in my_balances %}<tr class="active-row">
+                            <td class="styled-table" data-title="Coin">{{ balance['asset'] }}</td>
+                            <td class="styled-table" data-title="Amount">{{ balance['free'] }}</td>
+                        </tr style="border-bottom-right-radius:10px;">{% endfor %}
+                    </table>
+                </tbody>
+
+            </div>
+
+            <script>
+                var btcBinanceSocket = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@trade"),
+                    tradeDiv = document.getElementById("btc_trades");
+                btcBinanceSocket.onmessage = function (e) {
+                    console.log(e.data);
+                    var a = JSON.parse(e.data)
+                }
+            </script>
+            <script>
+                var ethBinanceSocket = new WebSocket("wss://stream.binance.com:9443/ws/etcusdt@trade"),
+                    tradeDiv = document.getElementById("eth_trades");
+                ethBinanceSocket.onmessage = function (e) {
+                    console.log(e.data);
+                    var a = JSON.parse(e.data)
+                }
+            </script>
+            <script src="{{ url_for('static', filename='btc-chart.js') }}"></script>
+            <script src="{{ url_for('static', filename='eth-chart.js') }}"></script>
+        </div>
+    </div>
+    <script src="{{url_for('static', filename='js/jquery.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/particles.js')}}"></script>
+    <script src="{{url_for('static', filename='js/index.js')}}"></script>
+    <script>
+        particlesJS("particles", {
+            particles: {
+                number: {
+                    value: 50,
+                    density: {
+                        enable: !0,
+                        value_area: 800
+                    }
+                },
+                color: {
+                    value: "#ffffff"
+                },
+                shape: {
+                    type: "circle",
+                    stroke: {
+                        width: 0,
+                        color: "#000000"
+                    },
+                    polygon: {
+                        nb_sides: 5
+                    },
+                    image: {
+                        src: "img/github.svg",
+                        width: 100,
+                        height: 200
+                    }
+                },
+                opacity: {
+                    value: .5,
+                    random: !1,
+                    anim: {
+                        enable: !1,
+                        speed: 1,
+                        opacity_min: .1,
+                        sync: !1
+                    }
+                },
+                size: {
+                    value: 3,
+                    random: !0,
+                    anim: {
+                        enable: !1,
+                        speed: 40,
+                        size_min: .1,
+                        sync: !1
+                    }
+                },
+                line_linked: {
+                    enable: !0,
+                    distance: 150,
+                    color: "#ffffff",
+                    opacity: .4,
+                    width: 1
+                },
+                move: {
+                    enable: !0,
+                    speed: 6,
+                    direction: "none",
+                    random: !1,
+                    straight: !1,
+                    out_mode: "out",
+                    bounce: !1,
+                    attract: {
+                        enable: !1,
+                        rotateX: 600,
+                        rotateY: 1200
+                    }
+                }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: {
+                        enable: !0,
+                        mode: "repulse"
+                    },
+                    onclick: {
+                        enable: !0,
+                        mode: "push"
+                    },
+                    resize: !0
+                },
+                modes: {
+                    grab: {
+                        distance: 400,
+                        line_linked: {
+                            opacity: 1
+                        }
+                    },
+                    bubble: {
+                        distance: 400,
+                        size: 40,
+                        duration: 2,
+                        opacity: 8,
+                        speed: 3
+                    },
+                    repulse: {
+                        distance: 200,
+                        duration: .4
+                    },
+                    push: {
+                        particles_nb: 4
+                    },
+                    remove: {
+                        particles_nb: 2
+                    }
+                }
+            },
+            retina_detect: !0
+        })
+    </script>
+</body>
+
+</html>
