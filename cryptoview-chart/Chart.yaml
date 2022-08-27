@@ -1,0 +1,9 @@
+apiVersion: v2
+appVersion: "1.16.0"
+name: cryptoview-chart
+description: A Helm chart for Kubernetes running cryptoview webapp
+maintainer:
+  - email: davepinhas89@gmail.com
+    name: David Pinhas
+version: 0.1.0
+type: application

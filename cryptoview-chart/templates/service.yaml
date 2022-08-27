@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    cloud.google.com/neg: '{"ingress":true}'
+  labels:
+    app.kubernetes.io/instance: cryptoview-app
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: cryptoview-chart
+    app.kubernetes.io/version: 1.16.0
+    helm.sh/chart: cryptoview-chart-0.0.1
+  name: cryptoview-app-cryptoview-chart
+  namespace: cryptoview-app
+spec:
+  ports:
+  - port: 5001
+    protocol: TCP
+    targetPort: 5001
+  selector:
+    app.kubernetes.io/instance: cryptoview-app
+    app.kubernetes.io/name: cryptoview-chart
