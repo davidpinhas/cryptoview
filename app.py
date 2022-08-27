@@ -1,10 +1,13 @@
 import os
-from termios import CINTR
 from flask import Flask, render_template, request, flash, redirect, jsonify
 from binance.client import Client
 from binance.enums import *
 from flask_healthz import healthz
 from flask_healthz import HealthError
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 api_key = os.environ.get('BINANCE_API')
 api_secret = os.environ.get('BINANCE_SECRET')
@@ -13,18 +16,22 @@ app = Flask(__name__)
 app.register_blueprint(healthz, url_prefix="/healthz")
 
 def healthcheck():
-    print("Health check passed")
+    app.logger.info("Health check passed")
 
 def liveness():
     try:
+        app.logger.info("Running liveness check")
         healthcheck()
     except Exception:
+        app.logger.error("Liveness probe health check has failed!")
         raise HealthError("Liveness health check failed")
 
 def readiness():
     try:
+        app.logger.info("Running readiness check")
         healthcheck()
     except Exception:
+        app.logger.error("Readiness probe health check has failed!")
         raise HealthError("Readiness health check failed")
 
 app.config.update(
@@ -47,50 +54,57 @@ def index():
     for asset in balances:
         if float(asset['free']) > 0:
             coins_list.append({'asset': asset['asset'], 'free': asset['free']})
-
+            app.logger.info(f"The asset {asset} retrival was successful")
+    
     exchange_info = client.get_exchange_info()
     symbols = exchange_info['symbols']
-
+    app.logger.info("Request was successfully sent to index page")
     return render_template('index.html', title=title, my_balances=coins_list, symbols=symbols)
 
 @app.route('/buy', methods=['POST'])
 def buy():
-    print(request.form)
+    app.logger.info(request.form)
     try:
         order = client.create_order(
         symbol=request.form['symbol'],
         side=SIDE_BUY,
         type=ORDER_TYPE_MARKET,
         quantity=request.form['quantity'])
+        app.logger.info(f"Transaction was successful for {request.form['symbol']} {request.form['quantity']}")
     except Exception as e:
+        app.logger.error(f"Transaction has failed")
         flash(e.message, "error")
 
     return redirect('/')
 
 @app.route('/invest', methods=['POST'])
 def invest():
-    print(request.form)
+    app.logger.info(request.form)
     try:
         order = client.create_order(
         symbol=request.form['symbol'],
         side=SIDE_BUY,
         type=ORDER_TYPE_MARKET,
         quantity=request.form['quantity'])
+        app.logger.info(f"Starting investing process")
     except Exception as e:
+        app.logger.error(f"Failed to start investing trigger")
         flash(e.message, "error")
 
     return redirect('/')
 
 @app.route('/stopinvest', methods=['POST'])
 def stopinvest():
-    print(request.form)
+    app.logger.info(request.form)
     try:
         order = client.create_order(
         symbol=request.form['symbol'],
         side=SIDE_BUY,
         type=ORDER_TYPE_MARKET,
         quantity=request.form['quantity'])
+        app.logger.info(f"Stopping investing process")
     except Exception as e:
+        app.logger.error(f"Failed to stop investing trigger")
         flash(e.message, "error")
 
     return redirect('/')
@@ -119,6 +133,8 @@ def btc_history():
         }
 
         btc_processed_candlesticks.append(candlestick)
+        app.logger.debug(f"Retriving BTC data for candlestick {candlestick}")
+
     return jsonify(btc_processed_candlesticks)
 
 @app.route('/eth_history')
@@ -137,6 +153,8 @@ def eth_history():
         }
 
         eth_processed_candlesticks.append(candlestick)
+        app.logger.debug(f"Retriving ETH data for candlestick {candlestick}")
+
     return jsonify(eth_processed_candlesticks)
 
 if __name__ == "__main__":
