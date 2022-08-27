@@ -1,4 +1,4 @@
-[![Binance Community API](https://cdn.discordapp.com/attachments/569865969120575519/718166995354255370/binance-api-black.png)](https://dev.binance.vision/)
+[![Binance Community API](https://github.com/davidpinhas/cryptoview/blob/master/static/images/CryptoView.png)](https://github.com/davidpinhas)
 # CryptoView
 A personal dashboard for your Binance wallet, using Binance API.
 For the full [Binance API documentation](https://python-binance.readthedocs.io/en/latest/binance.html).
