@@ -7,10 +7,13 @@ replicaCount: 2
 containerPort: 5001
 containerPortHttps: 8443
 
+binanceApi: STRING # Replace
+binanceSecret: STRING # Replace
+domain: example.com # Replace
+
 image:
-#   registry: my.registry/docker-repo/cryptoview:1.1.0
-#   repository: cryptoview
-#   tag: 1.1.0
+  repository: my.registry/path/to/image # Replace
+  tag: 0.0.1 # Replace
   pullPolicy: IfNotPresent
 imagePullSecrets:
 - name: regcred

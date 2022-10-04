@@ -27,28 +27,52 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "my.registry/docker-repo/cryptoview:1.2.1"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          - name: BINANCE_API
+            value: {{ .Values.binanceApi }}
+          - name: BINANCE_SECRET
+            value: {{ .Values.binanceSecret }}
           ports:
             - name: http
-              containerPort: 5001
+              containerPort: {{ .Values.containerPort }}
               protocol: TCP
           livenessProbe:
             httpGet:
               path: /healthz/liveness
               port: http
-            initialDelaySeconds: 120
-            periodSeconds: 20
-            timeoutSeconds: 10
+            initialDelaySeconds: 0
+            periodSeconds: 2
+            timeoutSeconds: 5
           readinessProbe:
             httpGet:
               path: /healthz/readiness
               port: http
-            initialDelaySeconds: 30
-            periodSeconds: 20
-            timeoutSeconds: 10
+            initialDelaySeconds: 0
+            periodSeconds: 2
+            timeoutSeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: cryptoview
+        - name: nginx
+          image: nginx
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: /etc/nginx/conf.d
+              name: nginx-config
+            - mountPath: /app/public
+              name: public-dir
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: cryptoview-nginx
+        - name: public-dir
+          emptyDir: {}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

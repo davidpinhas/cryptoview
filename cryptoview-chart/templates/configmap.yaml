@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cryptoview
+  namespace: cryptoview-app
+data:
+  FLASK_PORT: "5001"
+  FLASK_DEBUG: "0"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cryptoview-nginx
+  namespace: cryptoview-app
+data:
+  default.conf: |
+    log_format compression '$remote_addr - $remote_user [$time_local] '
+                          '"$request" $status $body_bytes_sent '
+                          '"$http_referer" "$http_user_agent" "$gzip_ratio"';
+
+    server {
+        listen 80;
+
+        server_name _;
+
+        # Logs
+        access_log  /var/log/nginx/cryptoview-access.log compression;
+        error_log   /var/log/nginx/cryptoview-error.log;
+
+        location / {
+            proxy_set_header Host $host ;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            
+            proxy_pass http://0.0.0.0:5001;
+            proxy_read_timeout 10;
+        }
+    }
