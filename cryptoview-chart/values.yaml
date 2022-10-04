@@ -1,33 +1,30 @@
-# Default values for cryptoview-chart.
-# This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 replicaCount: 2
 
-containerPort: 5001
-containerPortHttps: 8443
-
 binanceApi: STRING # Replace
 binanceSecret: STRING # Replace
+
 domain: example.com # Replace
+
+fullnameOverride: "cryptoview-app"
+containerPort: 5001
 
 image:
   repository: my.registry/path/to/image # Replace
   tag: 0.0.1 # Replace
   pullPolicy: IfNotPresent
+
 imagePullSecrets:
-- name: regcred
-nameOverride: ""
-fullnameOverride: ""
+- name: regcred # Create docker-registry secret with your registry credentials
+
 serviceAccount:
   create: true
-  annotations: {}
   name: "cryptoview"
-podAnnotations: {}
-podSecurityContext: {}
-securityContext: {}
+
 ingress:
   enabled: true
+
 resources:
   limits:
     cpu: 100m
@@ -35,12 +32,9 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
+
 autoscaling:
   enabled: true
   minReplicas: 2
   maxReplicas: 4
   averageUtilization: 80
-nodeSelector: {}
-tolerations: []
-affinity: {}
-env: []
